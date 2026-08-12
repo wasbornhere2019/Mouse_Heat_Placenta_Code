@@ -10,12 +10,17 @@ library(readxl)
 library(Seurat)
 library(msigdbr)
 
-#if it is good enough for Linus Torvalds it is good enough for me
+deg <- read_csv("~/schustlab/Heat_csv/04_differential_expression_all_results.csv")
+deg_sig <- deg %>%
+  filter(
+    cell_type %in% c("SynTI", "SynTII"),
+    p_val_adj < 0.05, abs(avg_log2FC) > log2(1.25))
 
-deg <- read_csv("~/schustlab/Heat_csv/04_differential_expression_all_results.csv") #Results from Shuang
-deg <- deg %>%
-  filter(cell_type %in% c("SynTI", "SynTII"))
 
+obj <- readRDS("~/schustlab/seurat_obj_perClusterAnnotated.rds")
+obj$sample_merged <- gsub("_[12]$", "", obj$sample)
+cbbPalette <- c("#000000", "#999999", "#E69F00", "#56B4E9", "#009E73",
+                "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
 ### optional part with mitochondrial gene filtering
 tmp <- tempfile(fileext = ".xls")
@@ -79,7 +84,7 @@ plot_df <- plot_df %>%
   mutate(
     timepoint = factor(
       timepoint,
-      levels = c("RT-E13.5","40-E13.5","RT-E13.5","40-E16.5")
+      levels = c("RT-E13.5","40-E13.5","RT-E16.5","40-E16.5")
     )
   )
 
@@ -102,7 +107,7 @@ plot_df <- plot_df %>%
     stage = ifelse(grepl("13.5", timepoint), "E13.5", "E16.5")
   )
 
-ggplot(plot_df, aes(x = timepoint, y = log_expr, color = cell_type)) +
+p <- ggplot(plot_df, aes(x = timepoint, y = log_expr, color = cell_type)) +
   
   stat_summary(
     aes(group = interaction(cell_type, stage)),
@@ -150,6 +155,15 @@ ggplot(plot_df, aes(x = timepoint, y = log_expr, color = cell_type)) +
     color = "Cell type",
   )
 
+ggsave(
+  filename = "/hpc/home/at535/schustlab/UMAPs mouse_heat/mitochondrial_log_expr_SynT.svg",
+  plot = p,
+  width = 10,
+  height = 8,
+  units = "in",
+  bg = "transparent"
+)
+
 ########Now lets look at hypoxia genes and oxphos stuff
 
 hypoxia_genes <- c(
@@ -157,7 +171,6 @@ hypoxia_genes <- c(
   "Eno1", "Pdk1", "Bnip3", "Ndrg1", "Car9", "Adm", "Lars2"
 )
 
-#references are in the paper and also personal communication
 oxphos_genes <- c(
   "Ndufa1","Ndufb3","Ndufs1","Ndufv1",   # Complex I
   "Sdha","Sdhb",                         # Complex II
@@ -685,7 +698,20 @@ p <- ggplot(plot_df, aes(x = condition, y = expr)) +
   )
 
 p #figure is too big to be just printed noticed this issue later when I was trying to print it on a smaller computer
+ggsave(
+  filename = "/hpc/home/at535/schustlab/UMAPs mouse_heat/mito_genes_visualized.svg",
+  plot = p,
+  width = 10,
+  height = 8,
+  units = "in",
+  bg = "transparent"
+)
 
 
+write.csv(
+  plot_df,
+  "/hpc/home/at535/schustlab/UMAPs mouse_heat/plot_df_log.csv",
+  row.names = FALSE
+)
 #this generates the fig
 
