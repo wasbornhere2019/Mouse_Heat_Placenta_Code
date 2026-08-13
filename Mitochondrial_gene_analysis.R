@@ -14,7 +14,7 @@ deg <- read_csv("~/schustlab/Heat_csv/04_differential_expression_all_results.csv
 deg_sig <- deg %>%
   filter(
     cell_type %in% c("SynTI", "SynTII"),
-    p_val_adj < 0.05, abs(avg_log2FC) > log2(1.25))
+    p_val_adj < 0.05, abs(avg_log2FC) > log2(1.25), pct.1 > 0.10 | pct.2 > 0.10)
 
 
 obj <- readRDS("~/schustlab/seurat_obj_perClusterAnnotated.rds")
@@ -154,6 +154,8 @@ p <- ggplot(plot_df, aes(x = timepoint, y = log_expr, color = cell_type)) +
     y = "log_expression",
     color = "Cell type",
   )
+
+p
 
 ggsave(
   filename = "/hpc/home/at535/schustlab/UMAPs mouse_heat/mitochondrial_log_expr_SynT.svg",
