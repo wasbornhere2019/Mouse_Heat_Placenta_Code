@@ -5,25 +5,16 @@
 library(Seurat)
 library(ggplot2)
 library(dplyr)
+library(speckle)
+library(limma)
+library(ggplot2)
+library(scales)
+
+
 obj <- readRDS("~/schustlab/seurat_obj_perClusterAnnotated.rds")
 obj$sample_merged <- gsub("_[12]$", "", obj$sample)
 cbbPalette <- c("#000000", "#999999", "#E69F00", "#56B4E9", "#009E73",
                 "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
-
-devtools::install_github("rpolicastro/scProportionTest")
-library(scProportionTest)
-prop_test <- sc_utils(obj)
-
-prop_test <- permutation_test(
-  prop_test, cluster_identity = "cell_type_cluster_annotated",
-  sample_1 = "RT-E16.5_2", sample_2 = "40-E16.5_1",
-  sample_identity = "sample"
-)
-permutation_plot(prop_test)
-
-library(speckle)
-library(limma)
-library(ggplot2)
 
 meta <- obj@meta.data
 colnames(meta)
@@ -35,8 +26,6 @@ propeller_results <- propeller(
   sample = meta$sample,
   group = meta$condition
 )
-
-plotCellTypeProps(clusters=cell_info$clusters, sample=cell_info$samples)
 
 ###############
 # DefaultAssay(obj) <- "RNA"
@@ -77,8 +66,6 @@ head(obj@assays$RNA@meta.features)
 #   xlab("Sample")
 # 
 # library(dplyr)
-library(ggplot2)
-library(scales)
 
 # compute proportions
 df <- obj@meta.data %>%
@@ -132,9 +119,6 @@ ggplot(data = df, aes(x = sample_merged, y = prop, fill = cell_type_cluster_anno
   ylab("Proportion") +
   xlab("Sample")
 
-library(dplyr)
-library(ggplot2)
-library(scales)
 
 # compute proportions (NOW within cell_type)
 df <- obj@meta.data %>%
