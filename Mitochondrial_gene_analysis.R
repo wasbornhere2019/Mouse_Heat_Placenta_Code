@@ -45,8 +45,25 @@ obj_cut <- subset(obj, subset = !cell_type_cluster_annotated %in% c("DSC..angiog
 avg_exp <- AverageExpression(
   obj_cut,
   features = deg_genes,
-  group.by = c("sample_merged", "cell_type_cluster_annotated")
+  group.by = c("sample", "cell_type_cluster_annotated")
 )$RNA
+
+# Remove replicate -1 / -2 immediately before the cell type
+merged_names <- gsub("-[12]_", "_", colnames(avg_exp))
+
+# Average replicate 1 and 2 to make their statistical weights equal
+avg_exp_merged <- sapply(
+  unique(merged_names),
+  function(x) {
+    rowMeans(avg_exp[, merged_names == x, drop = FALSE])
+  }
+)
+
+rownames(avg_exp_merged) <- rownames(avg_exp)
+avg_exp <- avg_exp_merged
+# Check
+colnames(avg_exp_merged)
+
 plot_df <- as.data.frame(t(avg_exp)) %>%
   mutate(timepoint = rownames(.)) %>%
   pivot_longer(-timepoint, names_to = "gene", values_to = "expr")
